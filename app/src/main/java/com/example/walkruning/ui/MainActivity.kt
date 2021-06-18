@@ -1,8 +1,9 @@
-package com.example.walkruning
+package com.example.walkruning.ui
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import com.example.walkruning.R
 import com.example.walkruning.db.RunningDAO
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
