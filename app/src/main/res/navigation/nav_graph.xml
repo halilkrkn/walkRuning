@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/nav_graph.xml"
+    app:startDestination="@id/setupFragment">
+
+    <fragment
+        android:id="@+id/runningFragment"
+        android:name="com.example.walkruning.ui.fragments.RunningFragment"
+        android:label="RunningFragment" >
+        <action
+            android:id="@+id/action_runningFragment_to_trackingFragment"
+            app:destination="@id/trackingFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.walkruning.ui.fragments.SettingsFragment"
+        android:label="SettingsFragment" />
+    <fragment
+        android:id="@+id/setupFragment"
+        android:name="com.example.walkruning.ui.fragments.SetupFragment"
+        android:label="SetupFragment" >
+        <action
+            android:id="@+id/action_setupFragment_to_runningFragment"
+            app:destination="@id/runningFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/trackingFragment"
+        android:name="com.example.walkruning.ui.fragments.TrackingFragment"
+        android:label="TrackingFragment" >
+        <action
+            android:id="@+id/action_trackingFragment_to_runningFragment"
+            app:destination="@id/runningFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/statisticsFragment"
+        android:name="com.example.walkruning.ui.fragments.StatisticsFragment"
+        android:label="StatisticsFragment" />
+</navigation>
