@@ -14,6 +14,7 @@ import com.google.android.gms.maps.GoogleMap
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_tracking.*
 
+// TODO: 20.06.2021 Tracking Fragment harita üzerinden takip izlence bölümü
 @AndroidEntryPoint
 class TrackingFragment:Fragment(R.layout.fragment_tracking) {
 
@@ -25,7 +26,7 @@ class TrackingFragment:Fragment(R.layout.fragment_tracking) {
         super.onViewCreated(view, savedInstanceState)
 
         btnToggleRun.setOnClickListener {
-            sendCommmandToService(ACTION_START_OR_RESUME_SERVICE)
+            sendCommandToService(ACTION_START_OR_RESUME_SERVICE)
         }
 
         mapView.onCreate(savedInstanceState)
@@ -34,7 +35,9 @@ class TrackingFragment:Fragment(R.layout.fragment_tracking) {
         }
     }
 
-    private fun sendCommmandToService(action:String){
+//    Oluşturulan Tracking Service sınıfından service'i çekiyoruz ve o service e komut gönderiyoruz.
+
+    private fun sendCommandToService(action:String){
         Intent(requireContext(),TrackingService::class.java).also {
             it.action = action
             requireContext().startService(it)

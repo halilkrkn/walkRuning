@@ -36,7 +36,7 @@ class RunningFragment:Fragment(R.layout.fragment_running), EasyPermissions.Permi
         if(TrackingUtility.hasLocationPermissions(requireContext())){
             return
         }
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ){
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q){
             EasyPermissions.requestPermissions(
                    this,
                     "You need to accept location permissions to use this app",
