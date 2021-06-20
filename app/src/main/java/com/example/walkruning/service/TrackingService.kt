@@ -1,29 +1,71 @@
 package com.example.walkruning.service
 
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.NotificationManager.IMPORTANCE_LOW
 import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Intent
+import android.location.Location
 import android.os.Build
+import android.os.Looper
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import com.example.walkruning.R
 import com.example.walkruning.other.Constants.ACTION_PAUSE_SERVICE
 import com.example.walkruning.other.Constants.ACTION_SHOW_TRACKING_FRAGMENT
 import com.example.walkruning.other.Constants.ACTION_START_OR_RESUME_SERVICE
 import com.example.walkruning.other.Constants.ACTION_STOP_SERVICE
+import com.example.walkruning.other.Constants.FASTEST_LOCATION_INTERVAL
+import com.example.walkruning.other.Constants.LOCATION_UPDATE_INTERVAL
 import com.example.walkruning.other.Constants.NOTIFICATION_CHANEL_ID
 import com.example.walkruning.other.Constants.NOTIFICATION_CHANEL_NAME
 import com.example.walkruning.other.Constants.NOTIFICATION_ID
+import com.example.walkruning.other.TrackingUtility
 import com.example.walkruning.ui.MainActivity
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.maps.model.LatLng
 import timber.log.Timber
 
+
+typealias Polyline = MutableList<LatLng>
+typealias Polylines = MutableList<Polyline>
 class TrackingService: LifecycleService() {
 
     var isFirstRun = true
+
+    // Konum Sağlayıcısı
+    lateinit var  fusedLocationProviderClient: FusedLocationProviderClient
+
+    companion object {
+        val isTracking = MutableLiveData<Boolean>()
+        val pathPoints = MutableLiveData<Polylines>()
+    }
+
+    // Haritada kullanıcının ilk harita bilgilerini göndermek için gerekli değerleri tanımlıyoruz.
+    private fun postInitialValues() {
+        isTracking.postValue(false)
+        pathPoints.postValue(mutableListOf())
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        postInitialValues()
+        fusedLocationProviderClient = FusedLocationProviderClient(this)
+
+        isTracking.observe(this, Observer {
+            updateLocationTracking(it)
+        })
+    }
+
 
 //    Tracking service i başlatma komutu
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -51,8 +93,16 @@ class TrackingService: LifecycleService() {
         return super.onStartCommand(intent, flags, startId)
     }
 
+
+
+//**************************** NOTIFICATION İŞLEMLERİ ****************************************
+
 //    Ön Baslatma Hizmeti yani Başlata tıklandığında app bildirim çubuğunda da gözükecek ve yönetilecek.
+//    Başlata tıklandığında harita da kullanıcının durumuna göre haritada izleyecek
     private fun startForegroundService(){
+        addEmptyPolyLine()
+        isTracking.postValue(true)
+
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
@@ -97,4 +147,69 @@ class TrackingService: LifecycleService() {
         )
         notificationManager.createNotificationChannel(channel)
     }
+
+
+//**************************** LOCATION İŞLEMLERİ ****************************************
+
+    // Location bilgilerini güncel olarak izlemek için yapıldı.
+    @SuppressLint("MissingPermission")
+    private fun updateLocationTracking(isTracking: Boolean){
+
+        if (isTracking){
+            if (TrackingUtility.hasLocationPermissions(this)){
+                val request = LocationRequest().apply {
+                    interval = LOCATION_UPDATE_INTERVAL
+                    fastestInterval = FASTEST_LOCATION_INTERVAL
+                    priority = PRIORITY_HIGH_ACCURACY
+                }
+                fusedLocationProviderClient.requestLocationUpdates(
+                        request,
+                        locationCallback,
+                        Looper.getMainLooper()
+                )
+            }
+        }else {
+            fusedLocationProviderClient.removeLocationUpdates(locationCallback)
+        }
+    }
+
+
+
+    // KUllanıcının Konum Bilgilerini geri çağırıp(alıp) anlık olarak addPathPoint e ekliyoruz.
+    val locationCallback = object : LocationCallback() {
+        override fun onLocationResult(result: LocationResult?) {
+            super.onLocationResult(result)
+
+            if (isTracking.value!!){
+                result?.locations?.let { locations ->
+                    for (location in locations){
+                        addPathPoint(location)
+                        Timber.d("NEW LOCATION:${location.latitude}, ${location.longitude}")
+                    }
+
+                }
+            }
+        }
+    }
+
+    // kullanıcının position ını alıp harita da konum bilgsini alıyoruz
+    private fun addPathPoint(location: Location?){
+
+        location?.let {
+            val position = LatLng(location.latitude,location.longitude)
+            pathPoints.value?.apply {
+                last().add(position)
+                pathPoints.postValue(this)
+            }
+        }
+
+
+    }
+    // İLk önce boş bir çoklu çizgi ekliyoruz.
+    private fun addEmptyPolyLine() = pathPoints.value?.apply {
+        add(mutableListOf())
+        pathPoints.postValue(this)
+    } ?: pathPoints.postValue(mutableListOf(mutableListOf()))
+
+
 }

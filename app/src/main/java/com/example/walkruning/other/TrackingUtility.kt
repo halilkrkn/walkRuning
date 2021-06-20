@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Build
 import pub.devrel.easypermissions.EasyPermissions
 
+// TrackingFragment içerisindeki Harita için  izinlerini Hallettik.
 object TrackingUtility {
 
     fun hasLocationPermissions(context: Context) =
