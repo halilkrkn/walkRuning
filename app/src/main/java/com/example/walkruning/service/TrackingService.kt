@@ -56,6 +56,8 @@ class TrackingService: LifecycleService() {
         pathPoints.postValue(mutableListOf())
     }
 
+
+    // Location Sağlayıcı biligilerini Bilgileri ve TrackingFragment de çalışması için
     override fun onCreate() {
         super.onCreate()
         postInitialValues()
@@ -64,7 +66,12 @@ class TrackingService: LifecycleService() {
         isTracking.observe(this, Observer {
             updateLocationTracking(it)
         })
+
+
     }
+
+
+
 
 
 //    Tracking service i başlatma komutu
@@ -76,24 +83,28 @@ class TrackingService: LifecycleService() {
                     if (isFirstRun){
                         startForegroundService()
                         isFirstRun = false
+
                     } else{
                         Timber.d("Resuming Service")
+                        startForegroundService()
+
                     }
                 }
                 ACTION_PAUSE_SERVICE -> {
                     Timber.d("Paused Service")
+                    pauseService()
                 }
                 ACTION_STOP_SERVICE -> {
                     Timber.d("Stopped Service")
                 }
             }
         }
-
-
         return super.onStartCommand(intent, flags, startId)
     }
 
-
+    private fun pauseService(){
+        isTracking.postValue(false)
+    }
 
 //**************************** NOTIFICATION İŞLEMLERİ ****************************************
 

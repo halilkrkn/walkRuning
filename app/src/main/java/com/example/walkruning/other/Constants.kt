@@ -1,5 +1,7 @@
 package com.example.walkruning.other
 
+import android.graphics.Color
+
 object Constants {
 
     const val  RUNNING_DATABASE_NAME = "running_db"
@@ -17,6 +19,10 @@ object Constants {
 
 
     const val  LOCATION_UPDATE_INTERVAL = 5000L // Konum güncelleme aralığı
-    const val FASTEST_LOCATION_INTERVAL = 2000L // En hızlı konum aralığı
+    const val  FASTEST_LOCATION_INTERVAL = 2000L // En hızlı konum aralığı
+
+    const val POLYLINE_COLOR = Color.RED
+    const val POLYLINE_WIDTH = 8f
+    const val MAP_ZOOM = 15f
 
 }
