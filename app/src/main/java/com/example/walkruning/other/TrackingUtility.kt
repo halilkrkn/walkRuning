@@ -4,10 +4,12 @@ import android.Manifest
 import android.content.Context
 import android.os.Build
 import pub.devrel.easypermissions.EasyPermissions
+import java.util.concurrent.TimeUnit
 
-// TrackingFragment içerisindeki Harita için  izinlerini Hallettik.
+
 object TrackingUtility {
 
+    // TrackingFragment içerisindeki Harita için  izinlerini Hallettik.
     fun hasLocationPermissions(context: Context) =
             if(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q){
                 EasyPermissions.hasPermissions(
@@ -23,4 +25,31 @@ object TrackingUtility {
                         Manifest.permission.ACCESS_BACKGROUND_LOCATION,
                 )
             }
+
+    // TODO: 21.06.2021 Koronometre İşlemleri
+    // Formatlanmış(Biçimlendirilmiş) Kronometre Süresini Almak için. Yani Kronometre Çalışması için Saat dakika saniye milisaniyelerin kurulumunu yaptık.
+    fun getFormattedStopWatchTime(ms: Long, includeMillis: Boolean = false):String {
+        var milliseconds = ms
+
+        val hours = TimeUnit.MILLISECONDS.toHours(milliseconds)
+        milliseconds -= TimeUnit.HOURS.toMillis(hours)
+
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(milliseconds)
+        milliseconds -= TimeUnit.MINUTES.toMillis(minutes)
+
+        val seconds = TimeUnit.MILLISECONDS.toSeconds(milliseconds)
+
+        if (!includeMillis){
+            return "${if (hours < 10) "0" else ""}$hours:" +
+                    "${if (minutes < 10) "0" else ""}$minutes:" +
+                    "${if (seconds < 10) "0" else ""}$seconds:"
+        }
+        milliseconds -= TimeUnit.SECONDS.toMillis(seconds)
+        milliseconds /= 10
+        return "${if (hours < 10) "0" else ""}$hours:" +
+                "${if (minutes < 10) "0" else ""}$minutes:" +
+                "${if (seconds < 10) "0" else ""}$seconds:" +
+                "${if (milliseconds < 10) "0" else ""}$milliseconds"
+
+    }
 }

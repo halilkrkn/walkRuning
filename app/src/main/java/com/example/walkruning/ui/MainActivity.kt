@@ -40,6 +40,7 @@ class MainActivity : AppCompatActivity() {
        }
     }
 
+    // TODO: 20.06.2021 Notification İşlemleri için
     //Uygulama kapatıldığında yine arkaplan çalışacak ve bildirim çubuğundan aktif olarak gözükecek.
     // Bildirim çubupundaki app uygulamasını tıklandığında uygulama tekrar çalışacak yani TrackingFragment UI ına gidecek
     override fun onNewIntent(intent: Intent?) {

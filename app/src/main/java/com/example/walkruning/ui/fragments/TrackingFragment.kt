@@ -13,6 +13,7 @@ import com.example.walkruning.other.Constants.ACTION_START_OR_RESUME_SERVICE
 import com.example.walkruning.other.Constants.MAP_ZOOM
 import com.example.walkruning.other.Constants.POLYLINE_COLOR
 import com.example.walkruning.other.Constants.POLYLINE_WIDTH
+import com.example.walkruning.other.TrackingUtility
 import com.example.walkruning.service.Polyline
 import com.example.walkruning.service.TrackingService
 import com.example.walkruning.ui.viewmodels.MainViewModel
@@ -33,6 +34,8 @@ class TrackingFragment:Fragment(R.layout.fragment_tracking) {
 
     private var map: GoogleMap? = null
 
+    private var currentTimeMillis = 0L
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -43,24 +46,37 @@ class TrackingFragment:Fragment(R.layout.fragment_tracking) {
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync {
             map = it
-            addAllPolylines()
+            addAllPolylines() // tüm çizgilerin haritada asenkron bir şekilde çalışması için buraya eklendi
         }
+
         subscribeToObservers()
     }
 
     private fun subscribeToObservers() {
 
+        // TODO: 20.06.2021  Kullanıcıyı Haritada İzleme ve Takip Etme İşlemleri
+        // Kullanıcıları gözlemleme, harita daki kullanıcnı konum biligileri için yazılan fonksiyonların ve Tracking Service in bu fonk da çalıştırılma
         TrackingService.isTracking.observe(viewLifecycleOwner, Observer {
             updateTracking(it)
         })
-
+        // TODO: 20.06.2021  Kullanıcıyı Haritada İzleme ve Takip Etme İşlemleri
+        // Kullanıcıları gözlemleme, harita daki kullanıcnı konum biligileri için yazılan fonksiyonların ve Tracking Service in bu fonk da çalıştırılmasısı
         TrackingService.pathPoints.observe(viewLifecycleOwner, Observer {
             pathPoints = it
             addLatestPolyline()
-            moveCameraUser()
+            moveCameraToUser()
+        })
+
+        // TODO: 21.06.2021 Koronometre İşlemleri
+        // Kronometre İşlemleri İçin TrackingService den gerekli işlemleri UI göstermek için
+        TrackingService.timeRunInMillis.observe(viewLifecycleOwner, Observer {
+            currentTimeMillis = it
+            val formattedTime = TrackingUtility.getFormattedStopWatchTime(currentTimeMillis,true)
+            tvTimer.text = formattedTime
         })
     }
 
+    // Haritada ki Olay geçişlerini Çalıştırmak için mesela durdurulduğunda hareket de duracak devam ettirildiğinde hareket devam edecek.
     private fun toggleRun(){
         if (isTracking) {
             sendCommandToService(ACTION_PAUSE_SERVICE)
@@ -69,6 +85,7 @@ class TrackingFragment:Fragment(R.layout.fragment_tracking) {
         }
     }
 
+    // Haritadan Güncel izleme durumuna göre start ve stop butonları ile tracking olaylarını yönetebilme
     private fun updateTracking(isTracking: Boolean)  {
         this.isTracking = isTracking
         if (!isTracking){
@@ -81,7 +98,8 @@ class TrackingFragment:Fragment(R.layout.fragment_tracking) {
         }
     }
 
-    private fun moveCameraUser() {
+    // Harita üzerindeki konum bilgilerinin çizgilerini  harita kamerası ile takip etme
+    private fun moveCameraToUser() {
         if (pathPoints.isNotEmpty() && pathPoints.last().isNotEmpty()) {
             map?.animateCamera(
                     CameraUpdateFactory.newLatLngZoom(
@@ -93,6 +111,7 @@ class TrackingFragment:Fragment(R.layout.fragment_tracking) {
     }
 
 
+    // Tüm çoklu çizgileri kullanıcnıın haritadaki pozisyonlarına göre konum bilgilerini alıp çizdirme.
     private fun addAllPolylines() {
         for(polyline in pathPoints){
             val polylineOptions = PolylineOptions()
@@ -118,8 +137,7 @@ class TrackingFragment:Fragment(R.layout.fragment_tracking) {
         }
     }
 
-//    Oluşturulan Tracking Service sınıfından service'i çekiyoruz ve o service e komut gönderiyoruz.
-
+//    Oluşturulan Tracking Service sınıfından service'i çekiyoruz ve o service e komut gönderiyoruz. Böylelikle Uygulamada başlama bekleme devam ettirme durdurma işlemleri buradan yönlendiriliyor.
     private fun sendCommandToService(action:String){
         Intent(requireContext(),TrackingService::class.java).also {
             it.action = action
