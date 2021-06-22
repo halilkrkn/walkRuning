@@ -58,10 +58,11 @@ class TrackingService: LifecycleService() {
     @Inject
     lateinit var  fusedLocationProviderClient: FusedLocationProviderClient
 
+    // TODO: 22.06.2021   Notification İşlemleri için
     @Inject
     lateinit var baseNotificationBuilder: NotificationCompat.Builder
-
     lateinit var currentNotificationBuilder: NotificationCompat.Builder
+
 
     private val timeRunInSeconds = MutableLiveData<Long>()
 
@@ -127,31 +128,6 @@ class TrackingService: LifecycleService() {
         isTimerEnabled = false
     }
 
-    private fun updateNotificationTrackingState(isTracking: Boolean){
-        val notificationActionText = if (isTracking) "Pause" else "Resume"
-
-        val pendingIntent = if (isTracking){
-            val pauseIntent = Intent(this, TrackingService::class.java).apply {
-                action = ACTION_PAUSE_SERVICE
-            }
-            PendingIntent.getService(this,1,pauseIntent, FLAG_UPDATE_CURRENT)
-        } else {
-            val resumeIntent = Intent(this, TrackingService::class.java).apply {
-                action = ACTION_START_OR_RESUME_SERVICE
-            }
-            PendingIntent.getService(this,2,resumeIntent, FLAG_UPDATE_CURRENT)
-        }
-
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        currentNotificationBuilder.javaClass.getDeclaredField("mActions").apply {
-            isAccessible = true
-            set(currentNotificationBuilder,ArrayList<NotificationCompat.Action>())
-        }
-        currentNotificationBuilder = baseNotificationBuilder
-                .addAction(R.drawable.ic_baseline_motion_photos_paused_24, notificationActionText,pendingIntent)
-        notificationManager.notify(NOTIFICATION_ID,currentNotificationBuilder.build())
-    }
 
 
     // TODO: 21.06.2021 ****** KRONOMETRE ISLEMLERI **********
@@ -190,7 +166,35 @@ class TrackingService: LifecycleService() {
 
 // TODO: 20.06.2021  ************************** NOTIFICATION İŞLEMLERİ ****************************************
 
-//    Ön Baslatma Hizmeti yani Başlata tıklandığında app bildirim çubuğunda da gözükecek ve yönetilecek.
+    // TODO: 22.06.2021  Notification (Bildirim) Çubuğunda kronometre sayacının aktifleştirilmesi ve bildirim çubuğu üzerinden koronomtrenin kontrolü yapıldı.
+    private fun updateNotificationTrackingState(isTracking: Boolean){
+        val notificationActionText = if (isTracking) "Pause" else "Resume"
+
+        val pendingIntent = if (isTracking){
+            val pauseIntent = Intent(this, TrackingService::class.java).apply {
+                action = ACTION_PAUSE_SERVICE
+            }
+            PendingIntent.getService(this,1,pauseIntent, FLAG_UPDATE_CURRENT)
+        } else {
+            val resumeIntent = Intent(this, TrackingService::class.java).apply {
+                action = ACTION_START_OR_RESUME_SERVICE
+            }
+            PendingIntent.getService(this,2,resumeIntent, FLAG_UPDATE_CURRENT)
+        }
+
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        currentNotificationBuilder.javaClass.getDeclaredField("mActions").apply {
+            isAccessible = true
+            set(currentNotificationBuilder,ArrayList<NotificationCompat.Action>())
+        }
+        currentNotificationBuilder = baseNotificationBuilder
+                .addAction(R.drawable.ic_baseline_motion_photos_paused_24, notificationActionText,pendingIntent)
+        notificationManager.notify(NOTIFICATION_ID,currentNotificationBuilder.build())
+    }
+
+
+    //    Ön Baslatma Hizmeti yani Başlata tıklandığında app bildirim çubuğunda da gözükecek ve yönetilecek.
 //    Başlata tıklandığında harita da kullanıcının durumuna göre haritada izleyecek
     private fun startForegroundService(){
 
@@ -205,6 +209,8 @@ class TrackingService: LifecycleService() {
 
     startForeground(NOTIFICATION_ID,baseNotificationBuilder.build())
 
+
+    // TODO: 22.06.2021 uygulamada tracking işlemi başlatıldığında notficationda e çalışıp sürecinin akması için
     timeRunInSeconds.observe(this, Observer {
         val notification = currentNotificationBuilder
                 .setContentText(TrackingUtility.getFormattedStopWatchTime(it * 1000L))

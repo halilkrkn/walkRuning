@@ -16,7 +16,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ServiceScoped
 
 
-// TODO: 22.06.2021 Notification (Bildirim) Çubuğunda kronometre sayacının aktifleştirilmesi ve bildirim çubuğu üzerinden sayacın kontrolü yapıldı. 
+// TODO: 22.06.2021 Notification (Bildirim) Çubuğunda kronometre sayacının aktifleştirilmesi, bildirim çubuğu üzerinden kronometrenin kullanımı ve Location İşlemleri için Service Modulü oluşturuldu.
 @Module
 @InstallIn(ServiceComponent::class)
 object ServiceModule {
