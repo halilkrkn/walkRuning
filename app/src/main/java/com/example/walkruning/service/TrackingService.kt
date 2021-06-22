@@ -51,8 +51,7 @@ typealias Polylines = MutableList<Polyline>
 class TrackingService: LifecycleService() {
 
     var isFirstRun = true
-
-
+    var serviceKilled = false
 
     // Konum Sağlayıcısı
     @Inject
@@ -96,7 +95,23 @@ class TrackingService: LifecycleService() {
 
     }
 
-//    Tracking service i başlatma komutu. Başlatma, Devam Ettirilme, Bekletme, Durdurma işlemleri intent sayesinde uı da yönlendirmeler yapılıyor.
+    // TODO: 22.06.2021 Harita kullanımından tamamen çıkıp tüm service işlemlerinden çıkmak için
+    private fun killService() {
+        serviceKilled = true
+        isTimerEnabled = true
+        pauseService()
+        postInitialValues()
+        stopForeground(true)
+        stopSelf()
+    }
+
+    private fun pauseService(){
+        isTracking.postValue(false)
+        isTimerEnabled = false
+    }
+
+
+    //    Tracking service i başlatma komutu. Başlatma, Devam Ettirilme, Bekletme, Durdurma işlemleri intent sayesinde uı da yönlendirmeler yapılıyor.
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.let {
             when(it.action){
@@ -117,17 +132,12 @@ class TrackingService: LifecycleService() {
                 }
                 ACTION_STOP_SERVICE -> {
                     Timber.d("Stopped Service")
+                    killService()
                 }
             }
         }
         return super.onStartCommand(intent, flags, startId)
     }
-
-    private fun pauseService(){
-        isTracking.postValue(false)
-        isTimerEnabled = false
-    }
-
 
 
     // TODO: 21.06.2021 ****** KRONOMETRE ISLEMLERI **********
@@ -188,9 +198,12 @@ class TrackingService: LifecycleService() {
             isAccessible = true
             set(currentNotificationBuilder,ArrayList<NotificationCompat.Action>())
         }
-        currentNotificationBuilder = baseNotificationBuilder
-                .addAction(R.drawable.ic_baseline_motion_photos_paused_24, notificationActionText,pendingIntent)
-        notificationManager.notify(NOTIFICATION_ID,currentNotificationBuilder.build())
+
+        if (!serviceKilled){
+            currentNotificationBuilder = baseNotificationBuilder
+                    .addAction(R.drawable.ic_baseline_motion_photos_paused_24, notificationActionText,pendingIntent)
+            notificationManager.notify(NOTIFICATION_ID,currentNotificationBuilder.build())
+        }
     }
 
 
@@ -212,9 +225,12 @@ class TrackingService: LifecycleService() {
 
     // TODO: 22.06.2021 uygulamada tracking işlemi başlatıldığında notficationda e çalışıp sürecinin akması için
     timeRunInSeconds.observe(this, Observer {
-        val notification = currentNotificationBuilder
-                .setContentText(TrackingUtility.getFormattedStopWatchTime(it * 1000L))
-        notificationManager.notify(NOTIFICATION_ID, notification.build())
+
+        if (!serviceKilled) {
+            val notification = currentNotificationBuilder
+                    .setContentText(TrackingUtility.getFormattedStopWatchTime(it * 1000L))
+            notificationManager.notify(NOTIFICATION_ID, notification.build())
+        }
     })
     }
 
