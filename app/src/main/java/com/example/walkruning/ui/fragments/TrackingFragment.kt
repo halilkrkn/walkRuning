@@ -8,6 +8,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.example.walkruning.R
+import com.example.walkruning.db.Running
 import com.example.walkruning.other.Constants
 import com.example.walkruning.other.Constants.ACTION_PAUSE_SERVICE
 import com.example.walkruning.other.Constants.ACTION_START_OR_RESUME_SERVICE
@@ -21,10 +22,14 @@ import com.example.walkruning.service.TrackingService
 import com.example.walkruning.ui.viewmodels.MainViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_tracking.*
+import java.util.*
+import kotlin.math.round
 
 // TODO: 20.06.2021 Tracking Fragment harita üzerinden takip izlence bölümü
 @AndroidEntryPoint
@@ -42,6 +47,8 @@ class TrackingFragment:Fragment(R.layout.fragment_tracking) {
 
     private var menu: Menu? = null
 
+    private var weight = 80f
+
     override fun onCreateView(
             inflater: LayoutInflater,
             container: ViewGroup?,
@@ -57,6 +64,11 @@ class TrackingFragment:Fragment(R.layout.fragment_tracking) {
 
         btnToggleRun.setOnClickListener {
             toggleRun()
+        }
+
+        btnFinishRun.setOnClickListener {
+            zoomToSeeWholeTrack()
+            endRunSaveToDb()
         }
 
         mapView.onCreate(savedInstanceState)
@@ -170,6 +182,46 @@ class TrackingFragment:Fragment(R.layout.fragment_tracking) {
                             MAP_ZOOM
                     )
             )
+        }
+    }
+
+    // TODO: 23.06.2021 Haritada kullanıcının tüm pozisyonlarını görmek için yaklaştırma işlemi yaptık
+     private fun zoomToSeeWholeTrack(){
+         val bounds = LatLngBounds.Builder()
+         for (polyline in pathPoints){
+             for (position in polyline){
+                 bounds.include(position)
+             }
+         }
+         map?.moveCamera(
+                 CameraUpdateFactory.newLatLngBounds(
+                         bounds.build(),
+                         mapView.width,
+                         mapView.height,
+                         (mapView.height * 0.05f).toInt()
+                 )
+         )
+     }
+
+    // TODO: 23.06.2021 Kullanıcı Haritayı çalıştırdığında harita üzerinde çizgiler vasıtasıyla takip edilip oradaki konumu ve yürüme mesafesi üzerinden oluşan bilgileri alıp haritada finish run butonuna tıklandığında harita kullanımını bitirip oluşan bilgileri database ekledik.
+    private fun endRunSaveToDb(){
+        map?.snapshot { btmp ->
+
+            var distanceMeters = 0
+            for(polyline in pathPoints){
+                distanceMeters += TrackingUtility.calculatePolylineLength(polyline).toInt()
+            }
+            val avgSpeed = round((distanceMeters / 1000f)/ (currentTimeMillis / 1000f / 60 / 60) * 10) /10f
+            val dateTimestamp = Calendar.getInstance().timeInMillis
+            val caloriesBurned = ((distanceMeters / 1000f) * weight).toInt()
+            val run = Running(btmp,dateTimestamp,avgSpeed,distanceMeters,currentTimeMillis,caloriesBurned)
+            viewModel.insertRunning(run)
+            Snackbar.make(
+                    requireActivity().findViewById(R.id.rootView),
+                    "Run saved succesfully",
+                    Snackbar.LENGTH_LONG
+            ).show()
+            stopRun()
         }
     }
 
