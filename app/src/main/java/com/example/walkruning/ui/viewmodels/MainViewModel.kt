@@ -18,5 +18,9 @@ class MainViewModel @ViewModelInject constructor(
     }
 
 
+    // TODO: 23.06.2021 Bu kısımda runningFragment ta database kayıt ettiğimiz bilgileri belli bir sıralamaya göre göstermek için mainViewModel de tanımladık. 
+    val runningSortedByDate = mainRepository.getAllRunsSortedByDate()
+
+
 
 }

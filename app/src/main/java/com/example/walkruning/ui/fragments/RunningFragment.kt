@@ -5,10 +5,15 @@ import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.widget.Adapter
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.walkruning.R
+import com.example.walkruning.adapters.RunningAdapter
 import com.example.walkruning.other.Constants.REQUEST_CODE_LOCATION_PERMISSION
 import com.example.walkruning.other.TrackingUtility
 import com.example.walkruning.ui.viewmodels.MainViewModel
@@ -22,13 +27,30 @@ class RunningFragment:Fragment(R.layout.fragment_running), EasyPermissions.Permi
 
     private val viewModel: MainViewModel by viewModels()
 
+    private  lateinit var runningAdapter: RunningAdapter
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        requestPermissions()
         floating_btn.setOnClickListener {
             findNavController().navigate(R.id.action_runningFragment_to_trackingFragment)
         }
+
+        requestPermissions()
+
+        // TODO: 23.06.2021
+        //  RecyclerView adapter oluşturup RunningFragmentta çalışması için kurulumunu yaptık
+        setupRecyclerView()
+        // mainViewModel aldığımız runningSortedByDate daki database eklenmiş olan bilgileri runningFragment Uı da listelemek için
+        viewModel.runningSortedByDate.observe(viewLifecycleOwner, Observer {
+            runningAdapter.submitList(it)
+        })
+    }
+
+    // TODO: 23.06.2021 - RecyclerView adapter oluşturup RunningFragmentta çalışması için kurulumunu yaptık.
+    private fun setupRecyclerView() = rvRuns.apply {
+        runningAdapter = RunningAdapter()
+        adapter = runningAdapter
+        layoutManager = LinearLayoutManager(requireContext())
     }
 
     // Lokasyon izinlerini için
