@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.Adapter
+import android.widget.AdapterView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.LifecycleOwner
@@ -15,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.walkruning.R
 import com.example.walkruning.adapters.RunningAdapter
 import com.example.walkruning.other.Constants.REQUEST_CODE_LOCATION_PERMISSION
+import com.example.walkruning.other.SortType
 import com.example.walkruning.other.TrackingUtility
 import com.example.walkruning.ui.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -37,11 +39,38 @@ class RunningFragment:Fragment(R.layout.fragment_running), EasyPermissions.Permi
 
         requestPermissions()
 
+        // TODO: 24.06.2021 spFilter filtreleme Çubuğunda sıralama işlemlerini ekleyip UI da gösterdik.
+        when(viewModel.sortType){
+            SortType.DATE -> spFilter.setSelection(0)
+            SortType.RUNNING_TIME -> spFilter.setSelection(1)
+            SortType.DISTANCE -> spFilter.setSelection(2)
+            SortType.AVG_SPEED -> spFilter.setSelection(3)
+            SortType.CALORIES_BURNED -> spFilter.setSelection(4)
+        }
+
+        // TODO: 24.06.2021  UI da filtreleme yaptıktan sonra eklenilen ögelere göre sıralama için seçme işlemi yapıldı.
+        spFilter.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+              when(position){
+                  0 -> viewModel.sortRuns(SortType.DATE)
+                  1 -> viewModel.sortRuns(SortType.RUNNING_TIME)
+                  2 -> viewModel.sortRuns(SortType.DISTANCE)
+                  3 -> viewModel.sortRuns(SortType.AVG_SPEED)
+                  4 -> viewModel.sortRuns(SortType.CALORIES_BURNED)
+
+              }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+
+        }
+
         // TODO: 23.06.2021
         //  RecyclerView adapter oluşturup RunningFragmentta çalışması için kurulumunu yaptık
         setupRecyclerView()
         // mainViewModel aldığımız runningSortedByDate daki database eklenmiş olan bilgileri runningFragment Uı da listelemek için
-        viewModel.runningSortedByDate.observe(viewLifecycleOwner, Observer {
+        // run diye bir değişken oluşturup tek bir değişken üzerinden değerleri uı de listeledik.
+        viewModel.runs.observe(viewLifecycleOwner, Observer {
             runningAdapter.submitList(it)
         })
     }
