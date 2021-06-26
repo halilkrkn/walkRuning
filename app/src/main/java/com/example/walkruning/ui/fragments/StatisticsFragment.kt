@@ -22,7 +22,7 @@ import kotlinx.android.synthetic.main.fragment_statistics.*
 import kotlin.math.round
 
 // TODO: 26.06.2021
-//  sadas
+//  Barchart Kurulumu ve Ayarlanması
 //  StatisticViewModel de tanımladığımız değişkenleri StatisticsFragment göstermek için viewModel sayesinde çağırıyoruz.
 
 @AndroidEntryPoint
