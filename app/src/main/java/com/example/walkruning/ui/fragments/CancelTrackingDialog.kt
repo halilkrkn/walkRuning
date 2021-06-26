@@ -6,6 +6,7 @@ import androidx.fragment.app.DialogFragment
 import com.example.walkruning.R
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
+// TODO: 26.06.2021 Uygulamadaki Cancel butonu sorunu çözüldü. 
 class CancelTrackingDialog : DialogFragment() {
 
     private var yesListener: (() -> Unit)? = null
