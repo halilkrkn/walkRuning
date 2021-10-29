@@ -7,7 +7,7 @@
 - Navigasyon Components yapıları 
 - Dagger İnjeksiyon yapıları
 - Dagger Hilt
-- Grafik Arayüz İşlemleri 
+- MPAndroidChart Grafik Arayüz İşlemleri 
 - Room Database İşlemleri 
 - Coroutines İşlemleri
 - Corutines Lifecycle Scopes
